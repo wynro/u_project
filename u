@@ -60,7 +60,7 @@ get_machines_inmersion () {
 		if [ "$STATE" = "in" ]; then
 		    if echo "$line" | grep "^\+" >/dev/null 2>/dev/null
 		    then
-			# I can not think this is the only way to do recursion...
+			# I can't believe this is the only way to do recursion...
 			STATE="out"
 			get_machines_inmersion `echo "$line" | sed 's/^\+//'`
 			STATE="in"
