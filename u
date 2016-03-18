@@ -1,0 +1,178 @@
+#!/bin/sh
+# Autor: Guillermo Robles Gonzalez
+#
+# Executes comands over multiple hosts
+
+CONFIG_DIR="$HOME/.u"
+HOSTS_FILE="$CONFIG_DIR/hosts"
+TMP_FILE="/tmp/u.tmp"
+
+# Check if .u dir exists
+if [ ! -d "$CONFIG_DIR" ]; then
+    mkdir "$CONFIG_DIR"
+fi
+
+# Function that checks if a determinate file exists, in case it does
+# not, it messages the user and exits with error code 1
+#
+# Parameters:
+# - 1: File to check for
+check_file () {
+    if [ ! -f "$1" ]; then
+	echo "The file $1 does not exist"
+	exit 1
+    fi
+}
+
+# Outputs all the machines in the given group, readen from the
+# HOSTS_FILE
+#
+# Parameters:
+# - 1: Group to search
+get_machines_in_group () {
+    get_machines_inmersion "$1" | sort | uniq
+}
+
+# Inmersion function for get_machines_in_group(), does the same
+# function but does not guarantee uniqueness
+#
+# Parameters:
+# - 1: Group to search
+get_machines_inmersion () {
+    if [ "$1" = "-" ]; then
+	# The user has selected all the machines
+	sort "$HOSTS_FILE" | uniq |
+	    grep -v -e "^#" -e "^ *$" -e "^-" -e "^\+"
+    else
+	# $1: Group to check
+        STATE="out"
+	# Take the file and prune comments
+        grep -v -e "^#" -e "^ *$" "$HOSTS_FILE" |
+	    while read line; do
+		if [ "$line" = "-$1" ]; then
+		    STATE="in"
+		    continue
+		fi
+		if echo "$line" | grep "^-" >/dev/null 2>/dev/null; then
+		    STATE="out"
+		    continue
+		fi
+		if [ "$STATE" = "in" ]; then
+		    if echo "$line" | grep "^\+" >/dev/null 2>/dev/null
+		    then
+			# I can not think this is the only way to do recursion...
+			STATE="out"
+			get_machines_inmersion `echo "$line" | sed 's/^\+//'`
+			STATE="in"
+		    else
+			echo "$line"
+		    fi
+		fi
+	    done
+    fi
+}
+
+# Function that pings all the hosts in a given group, messaging
+# the user about their state
+#
+# Parameters:
+# - 1: Group of machines to ping
+function_ping () {
+    get_machines_in_group "$1" |
+	while read line; do
+	    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$line" "echo ok 2>&1" >/dev/null 2>/dev/null; then
+		echo "$line: OK"
+	    else
+		echo "$line: ERROR"
+	    fi
+	done
+}
+
+# Function that executes a command in the hosts in the given group
+#
+# Parameters:
+# - 1: Group to execute into
+# - 2: Command to execute
+function_execute () {
+    get_machines_in_group "$1" |
+	while read line; do
+	    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$line" "$2" >"$TMP_FILE" 2>/dev/null; then
+		echo "==================================================="
+		echo "$line: OK"
+		cat "$TMP_FILE"
+	    else
+		echo "==================================================="
+		echo "$line: ERROR"
+		cat "$TMP_FILE"
+	    fi
+	done
+}
+
+# Function that applies remotely a Puppet file to the hosts in a given
+# group
+#
+# Parameters:
+# - 1: Group in which to apply
+# - 2: Puppet file to apply
+function_remote_config () {
+    get_machines_in_group "$1" |
+	while read line; do
+	    # We need to transform the host to consider : in the
+	    # middle of the host (scp breaks)
+	    hostSCP=`echo "$line" | sed -e 's/\([^@]*\)@\(.*\)/\1@[\2]/' -e 's/^\([^@]*\)$/[\1]/'`
+	    scp "$2" "$hostSCP:/tmp/puppet_file.pp"
+	    ssh -n "$line" "puppet apply \"/tmp/puppet_file.pp\""
+	    ssh -n "$line" "rm \"/tmp/puppet_file.pp\""
+	done
+}
+
+# Shows the program short help
+function_short_help () {
+    echo "u - Executes commands over multiple hosts"
+    echo ""
+    echo "Use 'u help' to obtain more info"
+}
+
+# Shows the program full help
+function_help () {
+    # Se ogamos, socorro!!
+    echo "u - Executes commands over multiple hosts"
+    echo ""
+    echo "u ORDER [OPTIONS]..."
+    echo ""
+    echo "Allows the execution of commands or pings over ssh to the hosts defined in the ~/.u/hosts file."
+    echo ""
+    echo "p, ping GROUP: Pings the hosts in the specified group, checking if they are able to establish a ssh connection"
+    echo "ex COMMAND, execute COMMAND: Executes the order on the hosts in the specified group, printing the result of the command"
+    echo "rc GROUP PUPPPET_FILE, remote-config GROUP PUPPPET_FILE: Applies the puppet file over all the hosts in the group"
+    echo "echo GROUP: Shows all the host in the specified group"
+    echo "help: Show this info"
+}
+
+# START
+COMMAND="$1"
+GROUP="$2"
+TODO=""
+
+case "$COMMAND" in
+    "p"|"ping")
+	check_file "$HOSTS_FILE"
+	function_ping "$GROUP";;
+    "s"|"execute")
+	check_file "$HOSTS_FILE"
+	# It's "good" to read stuff(Command line options) at this level?
+	COMMAND="$3"		# # FIXME: Rewriting variable
+	function_execute "$GROUP" "$COMMAND";;
+    "rc"|"remote-config")
+	PUPPET_FILE="$3"
+	check_file "$HOSTS_FILE"
+	check_file "$PUPPET_FILE"
+        function_remote_config "$GROUP" "$PUPPET_FILE";;
+    "echo")
+	check_file "$HOSTS_FILE"
+        get_machines_in_group "$GROUP";;
+    "h"|"help")
+	function_help;;
+    *)
+	function_short_help;;
+esac

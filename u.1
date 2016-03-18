@@ -1,0 +1,56 @@
+.TH U "1" "February 2016" "" "User Commands"
+.SH NAME
+u \- Executes commands over multiple hosts
+.SH SYNOPSIS
+.B u
+\fOORDER\fR
+\fOGROUP\fR
+[\fIOPTIONS\fR]...
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Allows the execution of various operations over ssh to the hosts defined
+in the ~/.u/hosts file. The format of that file is described in the section "FILES". Apart from the user defined groups, there is the special value '-', that applies the command over every host defined on every group (Once per host)
+
+The valid orders are:
+
+.TP
+\fBp, ping GROUP \fR
+Pings the hosts in the group, checking if its possible to establish a ssh connection
+.TP
+\fBs, execute GROUP COMMAND\fR
+Executes the order on every host in the group, printing the result of the command
+.TP
+\fBrc, remote-config GROUP PUPPET_FILE\fR
+Applies the given puppet file to all the hosts in the group
+.TP
+\fBecho GROUP\fR
+Outputs all the hosts in the specified group, one per line
+.TP
+\fBh, help\fR
+Show the help
+.SS "Exit status:"
+.TP
+0
+if OK,
+.TP
+1
+if minor problems (e.g., the hosts file is inaccessible).
+.SH FILES
+.PP
+\FC~/.u/host\F[]
+.RS 7 
+Contains the list of hosts to manage, each line containing a host, a
+comment, an include or an empty line. Lines starting with '#' are
+considered comments and thus ignored. The Hosts file is divided in
+sections, each section starting with the line \fI-GROUP_NAME\fR, and
+extends until another line starting with '-' is seen. A valid Hosts
+file MUST contain at least one section. Inside each section, there can
+be one or more \fI+INCLUDED_GROUP_NAME\fR sentence(s), which means
+that the current group will include also all the hosts in the
+\fIINCLUDED_GROUP_NAME\fR
+.\" By now, sections CANNOT be recursive
+.SH AUTHOR
+Written by Guillermo Robles
+.SH "REPORTING BUGS"
+Report all bugs to guillerobles1995@gmail.com
