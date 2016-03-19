@@ -101,17 +101,17 @@ function_ping () {
 }
 
 # Function to allow the use of parallel in execute function
-# - 1: Command to execute
-# - 2: Host to execute into
+# - 1: Host to execute into
+# - 2: Command to execute
 function_execute_parallel () {
-    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$2" "$1" >"$TMP_FILE" 2>/dev/null; then
-        echo "==================================================="
-	echo "$2: OK"
-	cat "$TMP_FILE"
+    HOST="$1"
+    shift
+    echo "==================================================="
+    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$HOST" "$@"
+    then
+	echo "$HOST: OK"
     else
-	echo "==================================================="
-	echo "$2: ERROR"
-	cat "$TMP_FILE"
+	echo "$HOST: ERROR"
     fi
     echo "==================================================="
 }
@@ -124,7 +124,7 @@ export -f function_execute_parallel
 # - 2: Command to execute
 function_execute () {
     if which parallel >/dev/null 2>&1; then
-	get_machines_in_group "$1" | parallel -k -j+10 function_execute_parallel "$2"
+	get_machines_in_group "$1" | parallel -k -j+10 function_execute_parallel {} $2
     else
 	get_machines_in_group "$1" |
 	    while read line; do
