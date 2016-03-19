@@ -72,21 +72,50 @@ get_machines_inmersion () {
     fi
 }
 
+# Function to allow the use of parallel in ping function
+#
+# - 1: Host to ping
+function_ping_parallel () {
+    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$1" "echo ok 2>&1" >/dev/null 2>/dev/null; then
+	echo "$1: OK"
+    else
+	echo "$1: ERROR"
+    fi
+}
+export -f function_ping_parallel
+
 # Function that pings all the hosts in a given group, messaging
 # the user about their state
 #
 # Parameters:
 # - 1: Group of machines to ping
 function_ping () {
-    get_machines_in_group "$1" |
-	while read line; do
-	    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$line" "echo ok 2>&1" >/dev/null 2>/dev/null; then
-		echo "$line: OK"
-	    else
-		echo "$line: ERROR"
-	    fi
-	done
+    if which parallel >/dev/null 2>&1; then
+    	get_machines_in_group "$1" | parallel -k -j+10 function_ping_parallel
+    else
+	get_machines_in_group "$1" |
+	    while read line; do
+		function_ping_parallel "$line"
+	    done
+    fi
 }
+
+# Function to allow the use of parallel in execute function
+# - 1: Host to execute into
+# - 2: Command to execute
+function_execute_parallel () {
+    HOST="$1"
+    shift
+    echo "==================================================="
+    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$HOST" "$@"
+    then
+	echo "$HOST: OK"
+    else
+	echo "$HOST: ERROR"
+    fi
+    echo "==================================================="
+}
+export -f function_execute_parallel
 
 # Function that executes a command in the hosts in the given group
 #
@@ -94,19 +123,29 @@ function_ping () {
 # - 1: Group to execute into
 # - 2: Command to execute
 function_execute () {
-    get_machines_in_group "$1" |
-	while read line; do
-	    if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$line" "$2" >"$TMP_FILE" 2>/dev/null; then
-		echo "==================================================="
-		echo "$line: OK"
-		cat "$TMP_FILE"
-	    else
-		echo "==================================================="
-		echo "$line: ERROR"
-		cat "$TMP_FILE"
-	    fi
-	done
+    if which parallel >/dev/null 2>&1; then
+	get_machines_in_group "$1" | parallel -k -j+10 function_execute_parallel {} $2
+    else
+	get_machines_in_group "$1" |
+	    while read line; do
+		function_execute_parallel "$2" "$line"
+	    done
+    fi
 }
+
+# Function to allow the use of parallel in remote_config function
+#
+# - 1: Puppet file to use
+# - 2: Host to execute into
+function_remote_config_parallel () {
+    # We need to transform the host to consider : in the
+    # middle of the host (scp breaks)
+    hostSCP=`echo "$2" | sed -e 's/\([^@]*\)@\(.*\)/\1@[\2]/' -e 's/^\([^@]*\)$/[\1]/'`
+    scp "$1" "$hostSCP:/tmp/puppet_file.pp"
+    ssh -n "$2" "puppet apply \"/tmp/puppet_file.pp\""
+    ssh -n "$2" "rm \"/tmp/puppet_file.pp\""
+}
+export -f function_execute_parallel
 
 # Function that applies remotely a Puppet file to the hosts in a given
 # group
@@ -115,15 +154,14 @@ function_execute () {
 # - 1: Group in which to apply
 # - 2: Puppet file to apply
 function_remote_config () {
-    get_machines_in_group "$1" |
-	while read line; do
-	    # We need to transform the host to consider : in the
-	    # middle of the host (scp breaks)
-	    hostSCP=`echo "$line" | sed -e 's/\([^@]*\)@\(.*\)/\1@[\2]/' -e 's/^\([^@]*\)$/[\1]/'`
-	    scp "$2" "$hostSCP:/tmp/puppet_file.pp"
-	    ssh -n "$line" "puppet apply \"/tmp/puppet_file.pp\""
-	    ssh -n "$line" "rm \"/tmp/puppet_file.pp\""
-	done
+    if which parallel >/dev/null 2>&1; then
+	get_machines_in_group "$1" | parallel -k -j+10 function_remote_config_parallel "$2"
+    else
+	get_machines_in_group "$1" |
+	    while read line; do
+		function_remote_config_parallel "$2" "$line"
+	    done
+    fi
 }
 
 # Shows the program short help
