@@ -16,19 +16,22 @@ pkg-noclean:
 	mkdir sa-u/usr/share/doc/sa-u
 	mkdir sa-u/usr/share/man
 	mkdir sa-u/usr/share/man/man1
+	mkdir sa-u/etc
+	mkdir sa-u/etc/bash_completion.d
 	# File structure
 	cp u sa-u/usr/bin
 	cp u.1 sa-u/usr/share/man/man1/
 	gzip -9 sa-u/usr/share/man/man1/u.1
 	cp changelog.Debian sa-u/usr/share/doc/sa-u
 	gzip -9 sa-u/usr/share/doc/sa-u/changelog.Debian
+	cp sa-u_completion sa-u/etc/bash_completion.d/sa-u
 	cp copyright sa-u/usr/share/doc/sa-u
 	cp control sa-u/DEBIAN/
 	# Permissions
 	sudo chown root:root sa-u/usr sa-u/usr/bin sa-u/usr/bin/u sa-u/usr/share sa-u/usr/share/doc sa-u/usr/share/doc sa-u/usr/share/doc/sa-u sa-u/usr/share/doc/sa-u/changelog.Debian.gz
-	sudo chown root:root sa-u/usr/share/doc/sa-u/copyright sa-u/usr/share/man/ sa-u/usr/share/man/man1 sa-u/usr/share/man/man1/u.1.gz
-	sudo chmod 755 sa-u/usr sa-u/usr/bin sa-u/usr/share sa-u/usr/share/doc sa-u/usr/share/doc/sa-u sa-u/usr/share/man/ sa-u/usr/share/man/man1
-	sudo chmod 644 sa-u/usr/share/doc/sa-u/changelog.Debian.gz sa-u/usr/share/doc/sa-u/copyright sa-u/usr/share/man/man1/u.1.gz
+	sudo chown root:root sa-u/usr/share/doc/sa-u/copyright sa-u/usr/share/man/ sa-u/usr/share/man/man1 sa-u/usr/share/man/man1/u.1.gz sa-u/etc/bash_completion.d sa-u/etc/bash_completion.d/sa-u
+	sudo chmod 755 sa-u/usr sa-u/usr/bin sa-u/usr/share sa-u/usr/share/doc sa-u/usr/share/doc/sa-u sa-u/usr/share/man/ sa-u/usr/share/man/man1 sa-u/etc/bash_completion.d
+	sudo chmod 644 sa-u/usr/share/doc/sa-u/changelog.Debian.gz sa-u/usr/share/doc/sa-u/copyright sa-u/usr/share/man/man1/u.1.gz sa-u/etc/bash_completion.d/sa-u
 	# Package build
 	dpkg --build sa-u
 
