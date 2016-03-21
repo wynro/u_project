@@ -1,0 +1,15 @@
+#!/bin/sh
+# Author: Guillermo Robles
+# 
+# Function execute from the suite u
+
+HOST="$1"
+shift
+echo "==================================================="
+if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$HOST" "$@"
+then
+    echo "$HOST: OK"
+else
+    echo "$HOST: ERROR"
+fi
+echo "==================================================="

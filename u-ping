@@ -1,0 +1,10 @@
+#!/bin/sh
+# Author: Guillermo Robles
+# 
+# Function parallel from the suite u
+
+if ssh -n -o "BatchMode yes" -o "ConnectTimeout 1" "$1" "echo ok 2>&1" >/dev/null 2>/dev/null; then
+    echo "$1: OK"
+else
+    echo "$1: ERROR"
+fi
