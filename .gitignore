@@ -1,1 +1,4 @@
+# Ignore built package
 sa-u.deb
+# Ignore build directory
+sa-u/**/*
