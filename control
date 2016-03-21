@@ -1,5 +1,5 @@
 package: sa-u
-Version: 1.4-0
+Version: 1.5-1
 Section: utils
 Priority: optional
 Depends: dash (>= 0.5.1), coreutils (>= 8.0), grep (>= 2.8), openssh-client (>= 1:6.6p1), sed (>= 4.0)
