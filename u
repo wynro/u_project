@@ -134,15 +134,15 @@ function_help () {
     # Se ogamos, socorro!!
     echo "u - Executes commands over multiple hosts"
     echo ""
-    echo "u ORDER [OPTIONS]..."
+    echo "u ORDER GROUP [OPTIONS]..."
     echo ""
     echo "Allows the execution of commands or pings over ssh to the hosts defined in the ~/.u/hosts file."
     echo ""
-    echo "p, ping GROUP: Pings the hosts in the specified group, checking if they are able to establish a ssh connection"
-    echo "ex COMMAND, execute COMMAND: Executes the order on the hosts in the specified group, printing the result of the command"
-    echo "rc GROUP PUPPPET_FILE, remote-config GROUP PUPPPET_FILE: Applies the puppet file over all the hosts in the group"
-    echo "echo GROUP: Shows all the host in the specified group"
-    echo "help: Show this info"
+    echo "p, ping GROUP                         Pings the hosts in the specified group, checking if they are able to establish a ssh connection"
+    echo "s, execute GROUP COMMAND              Executes the order on the hosts in the specified group, printing the result of the command"
+    echo "rc, remote-config GROUP PUPPET_FILE   Applies the puppet file over all the hosts in the group"
+    echo "echo GROUP                            Shows all the host in the specified group"
+    echo "help                                  Show this info"
 }
 
 # START
