@@ -1,0 +1,16 @@
+.TH U "1" "March 2016" "" "User Commands"
+.SH NAME
+u \- Executes commands over multiple hosts
+.SH SYNOPSIS
+.B u-remote-config
+\fOPUPPET_FILE\fR
+\fOHOST\fR
+.SH DESCRIPTION
+.PP
+Copies a Puppet file to the given host and applies it, giving info
+about its result. The command cleans the Puppet file in the remote
+host after execution only if the application was successful.
+.SH AUTHOR
+Written by Guillermo Robles
+.SH "REPORTING BUGS"
+Report all bugs to guillerobles1995@gmail.com

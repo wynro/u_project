@@ -21,8 +21,9 @@ pkg-noclean:
 	# File structure
 	cp u sa-u/usr/bin
 	cp u-* sa-u/usr/bin
-	cp u.1 sa-u/usr/share/man/man1
-	gzip -9 sa-u/usr/share/man/man1/u.1
+	rm sa-u/usr/bin/*.1
+	cp *.1 sa-u/usr/share/man/man1
+	gzip -9 sa-u/usr/share/man/man1/*.1
 	cp changelog.Debian sa-u/usr/share/doc/sa-u
 	gzip -9 sa-u/usr/share/doc/sa-u/changelog.Debian
 	cp sa-u_completion sa-u/etc/bash_completion.d/sa-u
