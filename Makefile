@@ -42,5 +42,6 @@ cleanAll:
 	sudo rm "sa-u.deb"
 
 upload:
-	scp u.1 u-* u central:.u/
+	scp u u-execute u-ping u-remote-config central:bin/
+	ssh central 'chmod +x bin/*'
 	scp sa-u_completion central:.bash-mod/bash_completion.d/
