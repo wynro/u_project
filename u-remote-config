@@ -7,4 +7,4 @@
 # middle of the host (scp breaks)
 hostSCP=`echo "$2" | sed -e 's/\([^@]*\)@\(.*\)/\1@[\2]/' -e 's/^\([^@]*\)$/[\1]/'`
 scp "$1" "$hostSCP:/tmp/puppet_file.pp"
-ssh -n "$2" "puppet apply \"/tmp/puppet_file.pp\" && rm \"/tmp/puppet_file.pp\""
+ssh -n "$2" "sudo puppet apply \"/tmp/puppet_file.pp\" && rm \"/tmp/puppet_file.pp\""
